@@ -9,10 +9,11 @@
 genomeDIR := ${HOME}/Documents/MeisterLab/GenomeVer/sequence
 genomefile := ${genomeDIR}/c_elegans.PRJNA13758.WS250.genomic.fa
 trimmomaticDIR := ${HOME}/Trimmomatic-0.36
+trimAdapterFile := ${trimmomaticDIR}/adapters/TruSeq_2-3_PE.fa
 bismarkDIR := ${HOME}/mySoftware/Bismark_v0.19.0
 methIndGenomeFiles := $(addprefix ${genomeDIR}/Bisulfite_Genome/CT_conversion/, BS_CT.1.bt2	BS_CT.3.bt2	BS_CT.rev.1.bt2	genome_mfa.CT_conversion.fa BS_CT.2.bt2	BS_CT.4.bt2 BS_CT.rev.2.bt2) \
 	$(addprefix ${genomeDIR}/Bisulfite_Genome/GA_conversion/, BS_GA.1.bt2 BS_GA.3.bt2 BS_GA.rev.1.bt2 genome_mfa.GA_conversion.fa BS_GA.2.bt2 BS_GA.4.bt2 BS_GA.rev.2.bt2)
-bname :=  $(addprefix 180126_SNK268_A_L001_JIB-, 1L 2L 3L 4L)
+bname :=  $(addprefix 180126_SNK268_A_L001_JIB-, 1 2 3 4)
 longbname := $(addsuffix _R1, $(bname)) $(addsuffix _R2, $(bname))
 
 
@@ -94,10 +95,12 @@ rawData/fastQC/%_fastqc.html: rawData/%.fastq.gz
 # use trimmomatic to trim
 trim/%_forward_paired.fq.gz trim/%_forward_unpaired.fq.gz trim/%_reverse_paired.fq.gz trim/%_reverse_unpaired.fq.gz: rawData/%_R1.fastq.gz rawData/%_R2.fastq.gz
 	mkdir -p trim
-	java -jar ${trimmomaticDIR}/trimmomatic-0.36.jar PE rawData/$*_R1.fastq.gz rawData/$*_R2.fastq.gz trim/$*_forward_paired.fq.gz trim/$*_forward_unpaired.fq.gz trim/$*_reverse_paired.fq.gz trim/$*_reverse_unpaired.fq.gz ILLUMINACLIP:${trimmomaticDIR}/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 2> trim/report_$*_trimmomatic.txt
-	# redo fastQC on trimmed reads
+	java -jar ${trimmomaticDIR}/trimmomatic-0.36.jar PE rawData/$*_R1.fastq.gz rawData/$*_R2.fastq.gz trim/$*_forward_paired.fq.gz trim/$*_forward_unpaired.fq.gz trim/$*_reverse_paired.fq.gz trim/$*_reverse_unpaired.fq.gz ILLUMINACLIP:${trimAdapterFile}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 2> trim/report_$*_trimmomatic.txt
+	
+# redo fastQC on trimmed reads	
+trim/fastQC/%_fastqc.html: trim/%.fq.gz
 	mkdir -p trim/fastQC
-	fastqc trim/$*_forward_paired.fq.gz trim/$*_forward_unpaired.fq.gz trim/$*_reverse_paired.fq.gz trim/$*_reverse_unpaired.fq.gz -o trim/fastQC
+	fastqc $^ -o trim/fastQC
 
 
 #######################################################
